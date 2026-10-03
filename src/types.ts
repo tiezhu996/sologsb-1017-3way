@@ -1,6 +1,7 @@
 export type RevisionColor = 'white' | 'blue' | 'pink' | 'yellow' | 'green' | 'goldenrod' | 'buff' | 'salmon' | 'cherry'
 export type WarningStatus = 'pending' | 'accepted' | 'ignored'
 export type WarningType = 'character' | 'prop' | 'wardrobe' | 'timeline'
+export type UnitGroup = 'ext' | 'int' | 'mixed'
 
 export interface Character {
   id: string
@@ -42,6 +43,12 @@ export interface Scene {
   revision: RevisionColor
   status: 'draft' | 'review' | 'locked'
   reason: string
+  /** 拍摄安排：拍摄日（如“第 1 拍摄日”），独立于故事顺序。 */
+  shootDay: string
+  /** 拍摄组别：外景组 / 内景组 / 混合组。 */
+  unit: UnitGroup
+  /** 全部拍摄场次中的统一顺位，从 1 开始。 */
+  shootOrder: number
 }
 
 export interface Script {
@@ -62,6 +69,8 @@ export interface WarningItem {
   title: string
   detail: string
   suggestion: string
+  /** 结论依据：由故事顺序与相关字段推导，只在依据变化时才退回重审。 */
+  basis: string
 }
 
 export interface Reply {
@@ -74,6 +83,11 @@ export interface Reply {
 export interface WarningReview {
   status: WarningStatus
   replies: Reply[]
+  /** 接受或忽略时所依据的警告依据快照。 */
+  basis?: string
+  /** 依据变化退回待审时的说明。 */
+  reopenReason?: string
+  reopenedAt?: string
 }
 
 export interface Version {

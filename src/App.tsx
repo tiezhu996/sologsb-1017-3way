@@ -31,10 +31,12 @@ import {
 import {
   Add,
   Block,
+  CalendarMonth,
   CheckCircle,
   Close,
   Storage,
   Difference,
+  HistoryEdu,
   Keyboard,
   NavigateBefore,
   NavigateNext,
@@ -61,7 +63,14 @@ const revisionOptions: Array<{ value: RevisionColor; label: string; color: strin
 ]
 const dayNightOptions = ['白天', '夜', '清晨', '黄昏', '傍晚']
 const timePeriods = ['白天', '夜', '清晨', '黄昏', '傍晚']
+const shootUnitOptions = ['外景组', '内景组', 'A 组', 'B 组']
 const searchFields = ['slug', 'synopsis', 'location', 'storyTime', 'reason'] as const
+
+function shootText(scene: Scene): string {
+  const day = scene.shootDay.trim()
+  if (!day) return '未排期'
+  return `${day}${scene.shootUnit.trim() ? ` · ${scene.shootUnit.trim()}` : ''} · 第 ${scene.shootOrder} 个拍`
+}
 
 function Highlight({ text, query }: { text: string; query: string }) {
   if (!query.trim()) return <>{text}</>
@@ -96,6 +105,7 @@ function SceneCard({ scene, query, active, onOpen }: { scene: Scene; query: stri
           <span>{scene.pageLength.toFixed(2)} 页</span>
           <span>{scene.characterIds.length} 个角色</span>
           <span>{scene.propIds.length} 个道具</span>
+          <span className="shoot-meta" title="拍摄安排独立于故事顺序，不影响连续性结论">🎬 {shootText(scene)}</span>
         </Stack>
       </Box>
     </Paper>
@@ -106,7 +116,7 @@ export default function App() {
   const store = useContinuityStore()
   const { state, warnings } = store
   const [selectedSceneId, setSelectedSceneId] = useState(state.script.scenes[0]?.id ?? '')
-  const [view, setView] = useState<'outline' | 'detail' | 'warnings' | 'versions'>('outline')
+  const [view, setView] = useState<'outline' | 'schedule' | 'detail' | 'warnings' | 'versions'>('outline')
   const [query, setQuery] = useState('')
   const [libraryOpen, setLibraryOpen] = useState(false)
   const [libraryTab, setLibraryTab] = useState('characters')
@@ -191,13 +201,108 @@ export default function App() {
           <Box>
             <Typography className="eyebrow">SCREENPLAY OVERVIEW</Typography>
             <Typography variant="h4">故事大纲</Typography>
-            <Typography color="text.secondary">按当前场次顺序检查人物出场、道具建立与时间推进。</Typography>
+            <Typography color="text.secondary">按故事顺序检查人物出场、道具建立与时间推进；拍摄安排见“拍摄安排”页，两者互不影响。</Typography>
           </Box>
           <Button variant="contained" startIcon={<Add />} onClick={() => { const sceneId = store.addScene(); setSelectedSceneId(sceneId); setView('detail') }}>新增场景</Button>
         </Stack>
         <Box className="outline-grid">
           {state.script.scenes.map((scene) => <SceneCard key={scene.id} scene={scene} query={query} active={scene.id === selectedScene?.id} onOpen={() => openScene(scene.id)} />)}
         </Box>
+      </Box>
+    )
+  }
+
+  function renderSchedule() {
+    const { groups, storyIndexById } = store.schedule
+    return (
+      <Box>
+        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={2} alignItems={{ sm: 'flex-end' }} mb={2}>
+          <Box>
+            <Typography className="eyebrow">SHOOTING SCHEDULE</Typography>
+            <Typography variant="h4">拍摄安排</Typography>
+            <Typography color="text.secondary">
+              为各场填写拍摄日、组别和顺位；调整这里只改变拍摄顺序，不会重算连续性，已接受的警告保持不变。
+            </Typography>
+          </Box>
+          <Chip icon={<CalendarMonth />} label={`${groups.filter((group) => group.day).length} 个拍摄日`} variant="outlined" />
+        </Stack>
+
+        <Alert severity="info" sx={{ mb: 2 }}>
+          故事顺序仍以“故事大纲”为准（括号内为故事场次）。外景组重排时直接改拍摄日 / 组别，或用组内上下移按钮调整顺位即可。
+        </Alert>
+
+        <Stack gap={2.5}>
+          {groups.map((group) => (
+            <Paper key={group.key} className="schedule-group" elevation={0}>
+              <Stack direction="row" alignItems="center" gap={1} className="schedule-group-head">
+                <Typography variant="h6">{group.day || '未排期场次'}</Typography>
+                {group.unit && <Chip size="small" label={group.unit} color="secondary" variant="outlined" />}
+                <Typography variant="body2" color="text.secondary">{group.scenes.length} 场</Typography>
+              </Stack>
+              <Box className="schedule-rows">
+                {group.scenes.map((scene, rank) => {
+                  const unscheduled = !group.day
+                  return (
+                    <Box key={scene.id} className="schedule-row">
+                      <Box className="schedule-story" title="故事顺序中的位置">
+                        <span className="schedule-order-label">故事</span>
+                        <strong>{(storyIndexById.get(scene.id) ?? 0) + 1}</strong>
+                      </Box>
+                      <Box className="schedule-scene">
+                        <button className="schedule-scene-link" onClick={() => openScene(scene.id)}>
+                          <strong>{scene.number}. {scene.slug}</strong>
+                          <span>{scene.intExt} · {scene.location} · {scene.dayNight} · {scene.storyTime}</span>
+                        </button>
+                      </Box>
+                      <TextField
+                        size="small"
+                        className="schedule-field-day"
+                        label="拍摄日"
+                        value={scene.shootDay}
+                        placeholder="如 第 1 拍摄日"
+                        onChange={(event) => store.updateShootField(scene.id, 'shootDay', event.target.value)}
+                      />
+                      <TextField
+                        size="small"
+                        select
+                        className="schedule-field-unit"
+                        label="组别"
+                        value={shootUnitOptions.includes(scene.shootUnit) ? scene.shootUnit : (scene.shootUnit || '')}
+                        onChange={(event) => store.updateShootField(scene.id, 'shootUnit', event.target.value)}
+                      >
+                        <MenuItem value="">未分组</MenuItem>
+                        {shootUnitOptions.map((unit) => <MenuItem key={unit} value={unit}>{unit}</MenuItem>)}
+                        {scene.shootUnit && !shootUnitOptions.includes(scene.shootUnit) && <MenuItem value={scene.shootUnit}>{scene.shootUnit}</MenuItem>}
+                      </TextField>
+                      <TextField
+                        size="small"
+                        type="number"
+                        className="schedule-field-order"
+                        label="顺位"
+                        value={scene.shootOrder}
+                        inputProps={{ min: 1 }}
+                        onChange={(event) => store.updateShootField(scene.id, 'shootOrder', Math.max(1, Number(event.target.value) || 1))}
+                      />
+                      <Stack direction="row" gap={0.5} className="schedule-arrows">
+                        <Tooltip title="同拍摄日同组别内前移（只改拍摄顺位）">
+                          <span>
+                            <IconButton size="small" disabled={rank === 0} onClick={() => store.moveShootScene(scene.id, -1)}><NavigateBefore /></IconButton>
+                          </span>
+                        </Tooltip>
+                        <Tooltip title="同拍摄日同组别内后移（只改拍摄顺位）">
+                          <span>
+                            <IconButton size="small" disabled={rank === group.scenes.length - 1} onClick={() => store.moveShootScene(scene.id, 1)}><NavigateNext /></IconButton>
+                          </span>
+                        </Tooltip>
+                      </Stack>
+                      {unscheduled && <Chip size="small" label="待排期" color="warning" variant="outlined" />}
+                    </Box>
+                  )
+                })}
+              </Box>
+            </Paper>
+          ))}
+        </Stack>
       </Box>
     )
   }
@@ -226,8 +331,8 @@ export default function App() {
             </Stack>
           </Box>
           <Stack direction="row" gap={1} flexWrap="wrap">
-            <Button variant="outlined" onClick={() => store.moveScene(selectedScene.id, -1)}>上移</Button>
-            <Button variant="outlined" onClick={() => store.moveScene(selectedScene.id, 1)}>下移</Button>
+            <Tooltip title="调整故事顺序：会改变人物出场与时间线依据，受影响的警告将退回待审"><span><Button variant="outlined" onClick={() => store.moveScene(selectedScene.id, -1)}>故事上移</Button></span></Tooltip>
+            <Tooltip title="调整故事顺序：会改变人物出场与时间线依据，受影响的警告将退回待审"><span><Button variant="outlined" onClick={() => store.moveScene(selectedScene.id, 1)}>故事下移</Button></span></Tooltip>
             <Button color="error" onClick={() => { store.deleteScene(selectedScene.id); setView('outline') }}>删除</Button>
           </Stack>
         </Stack>
@@ -321,6 +426,28 @@ export default function App() {
             </Box>
           )}
         </Paper>
+
+        <Paper className="editor-paper shoot-paper" elevation={0}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+            <Box>
+              <Typography variant="h6">拍摄安排</Typography>
+              <Typography variant="body2" color="text.secondary">拍摄日、组别和顺位只决定拍摄顺序，不影响故事大纲与连续性结论。</Typography>
+            </Box>
+            <Chip icon={<CalendarMonth />} size="small" label={shootText(selectedScene)} variant="outlined" />
+          </Stack>
+          <Box className="shoot-form-grid">
+            <TextField label="拍摄日" value={selectedScene.shootDay} placeholder="如 第 1 拍摄日" helperText="留空表示尚未排期" onChange={(event) => store.updateShootField(selectedScene.id, 'shootDay', event.target.value)} />
+            <TextField select label="组别" value={selectedScene.shootUnit} onChange={(event) => store.updateShootField(selectedScene.id, 'shootUnit', event.target.value)}>
+              <MenuItem value="">未分组</MenuItem>
+              {shootUnitOptions.map((unit) => <MenuItem key={unit} value={unit}>{unit}</MenuItem>)}
+            </TextField>
+            <TextField type="number" label="拍摄顺位" value={selectedScene.shootOrder} inputProps={{ min: 1 }} helperText="同拍摄日同组别内的顺序" onChange={(event) => store.updateShootField(selectedScene.id, 'shootOrder', Math.max(1, Number(event.target.value) || 1))} />
+            <Stack direction="row" gap={1} alignItems="center">
+              <Button variant="outlined" onClick={() => store.moveShootScene(selectedScene.id, -1)}>组内前移</Button>
+              <Button variant="outlined" onClick={() => store.moveShootScene(selectedScene.id, 1)}>组内后移</Button>
+            </Stack>
+          </Box>
+        </Paper>
       </Box>
     )
   }
@@ -363,6 +490,14 @@ export default function App() {
                     </Stack>
                     <Typography mt={1}>{warning.detail}</Typography>
                     <Typography variant="body2" color="text.secondary" mt={.5}>建议：{warning.suggestion}</Typography>
+                    {review.status === 'pending' && review.reopenedReason && (
+                      <Alert severity="info" className="reopen-note" icon={<HistoryEdu />}>
+                        <Typography variant="body2">
+                          该警告原为「{review.reopenedFrom === 'accepted' ? '已接受' : '已忽略'}」，因故事侧依据变化退回待审：{review.reopenedReason}
+                        </Typography>
+                        {review.reopenedAt && <Typography variant="caption" color="text.secondary">{new Date(review.reopenedAt).toLocaleString('zh-CN')}</Typography>}
+                      </Alert>
+                    )}
                   </Box>
                   <Chip label={review.status === 'accepted' ? '已接受' : review.status === 'ignored' ? '已忽略' : '待审'} color={review.status === 'accepted' ? 'success' : review.status === 'ignored' ? 'default' : 'warning'} />
                 </Box>
@@ -523,7 +658,8 @@ export default function App() {
       </Box>
 
       <Tabs value={view} onChange={(_, value) => setView(value)} variant="scrollable" className="view-tabs">
-        <Tab value="outline" label="大纲视图" />
+        <Tab value="outline" label="故事大纲" />
+        <Tab value="schedule" label="拍摄安排" icon={<CalendarMonth fontSize="small" />} iconPosition="start" />
         <Tab value="detail" label="场景详情" />
         <Tab value="warnings" label={<Badge badgeContent={pendingWarnings.length} color="warning"><span className="tab-label">警告审阅</span></Badge>} />
         <Tab value="versions" label={<Badge badgeContent={state.versions.length} color="secondary"><span className="tab-label">版本差异</span></Badge>} />
@@ -548,6 +684,7 @@ export default function App() {
           </Paper>
         )}
         {view === 'outline' && renderOutline()}
+        {view === 'schedule' && renderSchedule()}
         {view === 'detail' && renderSceneDetail()}
         {view === 'warnings' && renderWarnings()}
         {view === 'versions' && renderVersions()}
@@ -638,8 +775,8 @@ export default function App() {
                     {dayNightOptions.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
                   </TextField>
                   <Stack direction="row" gap={1}>
-                    <Button disabled={index === 0} onClick={() => store.moveScene(scene.id, -1)}>前移</Button>
-                    <Button disabled={index === state.script.scenes.length - 1} onClick={() => store.moveScene(scene.id, 1)}>后移</Button>
+                    <Tooltip title="调整故事顺序，受影响的连续性警告会退回待审"><span><Button disabled={index === 0} onClick={() => store.moveScene(scene.id, -1)}>前移</Button></span></Tooltip>
+                    <Tooltip title="调整故事顺序，受影响的连续性警告会退回待审"><span><Button disabled={index === state.script.scenes.length - 1} onClick={() => store.moveScene(scene.id, 1)}>后移</Button></span></Tooltip>
                   </Stack>
                 </Paper>
               ))}
@@ -665,7 +802,7 @@ export default function App() {
             <kbd>⇧⌘/Ctrl + Z</kbd><span>重做</span>
             <kbd>⌘/Ctrl + F</kbd><span>聚焦全文搜索</span>
             <kbd>⌘/Ctrl + Enter</kbd><span>保存版本</span>
-            <kbd>Alt + ↑ / ↓</kbd><span>移动当前场景</span>
+            <kbd>Alt + ↑ / ↓</kbd><span>调整当前场景的故事顺序（受影响警告回待审）</span>
             <kbd>← / →</kbd><span>前后切换场景</span>
             <kbd>Esc</kbd><span>清除搜索</span>
           </Box>

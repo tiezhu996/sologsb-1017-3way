@@ -39,6 +39,26 @@ mark { padding: 0 .1em; color: #3a2414; background: #f1d486; border-radius: 2px;
 .outline-copy h6 { margin-right: 4px; }
 .outline-synopsis { margin-top: 12px !important; color: #5f584f; line-height: 1.75; }
 .outline-meta { margin-top: 12px; color: #8b8277; font-size: 12px; }
+.outline-meta .shoot-meta { color: #6f7c5e; font-weight: 650; cursor: help; }
+
+/* 拍摄安排 */
+.schedule-group { padding: 16px 18px; border: 1px solid #d8d0c4 !important; border-radius: 13px !important; background: #fbf8f2; }
+.schedule-group-head { margin-bottom: 12px; }
+.schedule-rows { display: grid; gap: 8px; }
+.schedule-row { display: grid; grid-template-columns: 64px minmax(180px, 1.6fr) minmax(130px, 1fr) 110px 92px 84px; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid #e4ddd2; border-radius: 10px; background: #fffdf8; }
+.schedule-story { display: flex; flex-direction: column; align-items: center; gap: 1px; color: #9c7658; }
+.schedule-story strong { font-size: 18px; font-family: Georgia, serif; color: #7b4b2a; }
+.schedule-order-label { font-size: 10px; color: #a99f92; letter-spacing: .08em; }
+.schedule-scene-link { display: grid; gap: 2px; padding: 0; border: 0; color: inherit; background: none; text-align: left; cursor: pointer; }
+.schedule-scene-link strong { font-size: 14px; }
+.schedule-scene-link:hover strong { color: #7b4b2a; text-decoration: underline; }
+.schedule-scene-link span { font-size: 12px; color: #8b8277; }
+.schedule-arrows { justify-content: center; }
+.shoot-paper { border-style: dashed !important; background: #f8faf4; }
+.shoot-form-grid { display: grid; grid-template-columns: repeat(3, minmax(140px, 1fr)) auto; gap: 14px; align-items: center; margin-top: 16px; }
+.reopen-note { margin-top: 10px !important; background: #f0f5f9 !important; }
+
+/* 修订色点 */
 .revision-dot, .revision-swatch { width: 14px; height: 14px; display: inline-block; border: 1px solid rgba(50,40,30,.23); border-radius: 50%; vertical-align: middle; }
 .revision-white { background: #f7f5ee; }
 .revision-blue { background: #7da6c9; }
@@ -104,6 +124,9 @@ kbd { padding: 5px 8px; color: #fdf9f1; border-radius: 5px; background: #44382e;
   .scene-number { width: auto; }
   .outline-card { grid-template-columns: 52px 1fr; }
   .form-grid, .relation-grid, .version-layout { grid-template-columns: 1fr; }
+  .schedule-row { grid-template-columns: 48px 1fr; }
+  .schedule-field-day, .schedule-field-unit, .schedule-field-order, .schedule-arrows { grid-column: 2; }
+  .shoot-form-grid { grid-template-columns: 1fr; }
   .form-grid .span-2 { grid-column: auto; }
   .form-grid > .MuiBox-root, .relation-grid > .MuiBox-root { grid-column: 1; }
   .editor-paper { padding: 16px; }

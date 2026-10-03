@@ -24,19 +24,23 @@ export const sampleScript: Script = {
   scenes: [
     {
       id: 'scene-1', number: '1', slug: '堤岸·雨夜', synopsis: '林默准备卖掉旧船，苏遥带着一盘匿名录音出现。', intExt: 'EXT', location: '旧渔港堤岸', dayNight: '夜', storyTime: '第 1 天 22:40', pageLength: 2.25,
-      characterIds: ['char-lin', 'char-su'], propIds: ['prop-recorder'], costumes: { 'char-lin': 'ward-lin-jacket', 'char-su': 'ward-su-coat' }, revision: 'white', status: 'review', reason: '加强苏遥主动接近林默的动机。'
+      characterIds: ['char-lin', 'char-su'], propIds: ['prop-recorder'], costumes: { 'char-lin': 'ward-lin-jacket', 'char-su': 'ward-su-coat' }, revision: 'white', status: 'review', reason: '加强苏遥主动接近林默的动机。',
+      shootDay: '第 2 拍摄日', shootUnit: '外景组', shootOrder: 2
     },
     {
       id: 'scene-2', number: '2', slug: '维修铺·录音', synopsis: '录音里出现林默失踪兄长的声音，画面切入回忆。', intExt: 'INT', location: '船舶维修铺', dayNight: '夜', storyTime: '第 1 天 23:20', pageLength: 1.5,
-      characterIds: ['char-lin', 'char-su', 'char-zhou'], propIds: ['prop-recorder', 'prop-ticket'], costumes: { 'char-lin': 'ward-lin-jacket', 'char-su': 'ward-su-coat' }, revision: 'blue', status: 'draft', reason: '将录音身份从陌生人改为兄长。'
+      characterIds: ['char-lin', 'char-su', 'char-zhou'], propIds: ['prop-recorder', 'prop-ticket'], costumes: { 'char-lin': 'ward-lin-jacket', 'char-su': 'ward-su-coat' }, revision: 'blue', status: 'draft', reason: '将录音身份从陌生人改为兄长。',
+      shootDay: '第 3 拍摄日', shootUnit: '内景组', shootOrder: 1
     },
     {
       id: 'scene-3', number: '3', slug: '售票厅·白日', synopsis: '两人核对船票，发现日期与海难发生日不吻合。', intExt: 'INT', location: '废弃售票厅', dayNight: '白天', storyTime: '第 2 天 10:10', pageLength: 2.75,
-      characterIds: ['char-lin', 'char-su'], propIds: ['prop-ticket', 'prop-recorder'], costumes: { 'char-lin': 'ward-lin-jacket', 'char-su': 'ward-su-coat' }, revision: 'pink', status: 'draft', reason: '合并原第 3、4 场，避免重复解释。'
+      characterIds: ['char-lin', 'char-su'], propIds: ['prop-ticket', 'prop-recorder'], costumes: { 'char-lin': 'ward-lin-jacket', 'char-su': 'ward-su-coat' }, revision: 'pink', status: 'draft', reason: '合并原第 3、4 场，避免重复解释。',
+      shootDay: '第 3 拍摄日', shootUnit: '内景组', shootOrder: 2
     },
     {
       id: 'scene-4', number: '4', slug: '灯塔·黎明', synopsis: '乔叔交出铜钥匙，苏遥确认录音经过剪辑。', intExt: 'EXT', location: '北岬灯塔', dayNight: '清晨', storyTime: '第 2 天 05:30', pageLength: 3.5,
-      characterIds: ['char-lin', 'char-su', 'char-qiao'], propIds: ['prop-key', 'prop-recorder'], costumes: { 'char-lin': 'ward-lin-shirt', 'char-su': 'ward-su-coat', 'char-qiao': 'ward-qiao-raincoat' }, revision: 'yellow', status: 'review', reason: '呈现人物做最终决定的动作，而非对白解释。'
+      characterIds: ['char-lin', 'char-su', 'char-qiao'], propIds: ['prop-key', 'prop-recorder'], costumes: { 'char-lin': 'ward-lin-shirt', 'char-su': 'ward-su-coat', 'char-qiao': 'ward-qiao-raincoat' }, revision: 'yellow', status: 'review', reason: '呈现人物做最终决定的动作，而非对白解释。',
+      shootDay: '第 1 拍摄日', shootUnit: '外景组', shootOrder: 1
     }
   ]
 }
